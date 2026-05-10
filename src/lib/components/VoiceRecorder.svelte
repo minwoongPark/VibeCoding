@@ -1,5 +1,5 @@
 <script>
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	
 	// Svelte 5 반응형 변수들
 	let isRecording = $state(false);		// 녹음 상태 (true: 녹음 중, false: 정지)
@@ -10,6 +10,26 @@
 	let recordingInterval = null;		// 타이머 ID
 	let isPlaying = $state(false);		// 오디오 재생 상태
 	let audioElement = null;			// HTML5 Audio 요소
+	
+	// 파형 시각화 관련 변수들
+	let audioContext = null;			// Web Audio API 컨텍스트
+	let analyser = null;				// 오디오 분석기
+	let microphone = null;				// 마이크 입력
+	let animationId = null;				// 애니메이션 프레임 ID
+	let canvas = null;					// Canvas 요소
+	let canvasContext = null;			// Canvas 컨텍스트
+
+	// 컴포넌트 마운트 시 Canvas 초기화
+	onMount(() => {
+		// Canvas 요소와 컨텍스트 초기화
+		canvas = document.querySelector('.waveform-canvas');
+		if (canvas) {
+			canvasContext = canvas.getContext('2d');
+			// Canvas 크기 설정
+			canvas.width = canvas.offsetWidth;
+			canvas.height = canvas.offsetHeight;
+		}
+	});
 
 	// 컴포넌트가 파괴될 때 정리 작업
 	onDestroy(() => {
@@ -20,6 +40,14 @@
 		// 타이머 정리
 		if (recordingInterval) {
 			clearInterval(recordingInterval);
+		}
+		// 파형 애니메이션 정리
+		if (animationId) {
+			cancelAnimationFrame(animationId);
+		}
+		// 오디오 컨텍스트 정리
+		if (audioContext) {
+			audioContext.close();
 		}
 		// 오디오 정리
 		if (audioElement) {
@@ -32,11 +60,93 @@
 		}
 	});
 
+	// 파형 시각화 함수
+	function drawWaveform() {
+		if (!analyser || !canvasContext || !canvas) return;
+
+		const bufferLength = analyser.frequencyBinCount;
+		const dataArray = new Uint8Array(bufferLength);
+		analyser.getByteTimeDomainData(dataArray);
+
+		// Canvas 초기화
+		canvasContext.fillStyle = '#000000';
+		canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+
+		// 파형 그리기
+		canvasContext.lineWidth = 2;
+		canvasContext.strokeStyle = '#00a86b';
+		canvasContext.beginPath();
+
+		const sliceWidth = canvas.width / bufferLength;
+		let x = 0;
+
+		for (let i = 0; i < bufferLength; i++) {
+			const v = dataArray[i] / 128.0;
+			const y = v * canvas.height / 2;
+
+			if (i === 0) {
+				canvasContext.moveTo(x, y);
+			} else {
+				canvasContext.lineTo(x, y);
+			}
+
+			x += sliceWidth;
+		}
+
+		canvasContext.lineTo(canvas.width, canvas.height / 2);
+		canvasContext.stroke();
+
+		// 다음 프레임 요청
+		animationId = requestAnimationFrame(drawWaveform);
+	}
+
+	// 파형 시각화 시작 함수
+	function startWaveformVisualization(stream) {
+		try {
+			// Web Audio API 컨텍스트 생성
+			audioContext = new (window.AudioContext || window.webkitAudioContext)();
+			analyser = audioContext.createAnalyser();
+			microphone = audioContext.createMediaStreamSource(stream);
+
+			// 분석기 설정
+			analyser.fftSize = 2048;
+			microphone.connect(analyser);
+
+			// 파형 그리기 시작
+			drawWaveform();
+		} catch (error) {
+			console.error('파형 시각화 오류:', error);
+		}
+	}
+
+	// 파형 시각화 중지 함수
+	function stopWaveformVisualization() {
+		if (animationId) {
+			cancelAnimationFrame(animationId);
+			animationId = null;
+		}
+		if (microphone) {
+			microphone.disconnect();
+			microphone = null;
+		}
+		if (analyser) {
+			analyser.disconnect();
+			analyser = null;
+		}
+		if (audioContext) {
+			audioContext.close();
+			audioContext = null;
+		}
+	}
+
 	// 녹음 시작 함수
 	async function startRecording() {
 		try {
 			// 마이크 접근 권한 요청
 			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			
+			// 파형 시각화 시작
+			startWaveformVisualization(stream);
 			
 			// MediaRecorder 인스턴스 생성
 			mediaRecorder = new MediaRecorder(stream);
@@ -88,6 +198,9 @@
 			// MediaRecorder 중지
 			mediaRecorder.stop();
 			isRecording = false;
+			
+			// 파형 시각화 중지
+			stopWaveformVisualization();
 			
 			// 타이머 정지
 			if (recordingInterval) {
@@ -160,6 +273,11 @@
 				<!-- 녹음 시간 표시 -->
 				<div class="timer-display">
 					{formatTime(recordingTime)}
+				</div>
+				
+				<!-- 파형 시각화 윈도우 -->
+				<div class="waveform-display">
+					<canvas class="waveform-canvas"></canvas>
 				</div>
 				
 				<!-- 녹음 버튼 -->
@@ -280,7 +398,7 @@
 		font-size: 4rem;
 		font-weight: bold;
 		color: #ffffff;
-		margin-bottom: 2rem;
+		margin-bottom: 1.5rem;
 		text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.1em;
@@ -288,6 +406,24 @@
 		padding: 1rem;
 		border-radius: 12px;
 		border: 2px solid #444;
+	}
+
+	/* 파형 시각화 윈도우 - 전문적인 녹음기 스타일 */
+	.waveform-display {
+		width: 100%;
+		height: 120px;
+		background: #000000;
+		border: 2px solid #444;
+		border-radius: 8px;
+		margin-bottom: 2rem;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.waveform-canvas {
+		width: 100%;
+		height: 100%;
+		display: block;
 	}
 
 	/* 녹음 버튼 - 전문적인 녹음기 스타일 */
