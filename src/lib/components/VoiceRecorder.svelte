@@ -259,33 +259,38 @@
 </div>
 
 <style>
-	/* 메인 컨테이너 */
+	/* 메인 컨테이너 - 전문적인 녹음기 스타일 */
 	.voice-recorder {
 		max-width: 500px;
 		margin: 0 auto;
 		padding: 2rem;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		border-radius: 20px;
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+		background: #1a1a1a;
+		border-radius: 16px;
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		border: 1px solid #333;
 	}
 
 	.recording-container {
 		text-align: center;
 	}
 
-	/* 타이머 표시 */
+	/* 타이머 표시 - 전문적인 녹음기 스타일 */
 	.timer-display {
 		font-size: 4rem;
 		font-weight: bold;
-		color: white;
+		color: #ffffff;
 		margin-bottom: 2rem;
-		text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+		text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.1em;
+		background: #2a2a2a;
+		padding: 1rem;
+		border-radius: 12px;
+		border: 2px solid #444;
 	}
 
-	/* 녹음 버튼 */
+	/* 녹음 버튼 - 전문적인 녹음기 스타일 */
 	.record-btn {
 		display: inline-flex;
 		align-items: center;
@@ -297,10 +302,11 @@
 		font-weight: 700;
 		cursor: pointer;
 		transition: all 0.3s ease;
-		background: white;
-		color: #667eea;
+		background: #2a2a2a;
+		color: #ffffff;
 		margin-bottom: 1.5rem;
-		box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+		border: 2px solid #444;
 	}
 
 	.record-btn:hover {
@@ -308,46 +314,48 @@
 		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
 	}
 
-	/* 녹음 중 버튼 스타일 */
+	/* 녹음 중 버튼 스타일 - 전문적인 레코딩 앱 스타일 */
 	.record-btn.recording {
-		background: #ff4757;
-		color: white;
+		background: #ff0000;
+		color: #ffffff;
+		border-color: #cc0000;
 		animation: pulse 1.5s infinite;
+		box-shadow: 0 8px 20px rgba(255, 0, 0, 0.4);
 	}
 
-	/* 녹음 중 펄스 애니메이션 */
+	/* 녹음 중 펄스 애니메이션 - 전문적인 레코딩 앱 스타일 */
 	@keyframes pulse {
 		0% {
-			box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+			box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
 		}
 		70% {
-			box-shadow: 0 0 0 20px rgba(255, 71, 87, 0);
+			box-shadow: 0 0 0 20px rgba(255, 0, 0, 0);
 		}
 		100% {
-			box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+			box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
 		}
 	}
 
-	/* 상태 메시지 */
+	/* 상태 메시지 - 전문적인 녹음기 스타일 */
 	.status-message {
-		color: rgba(255, 255, 255, 0.9);
+		color: #cccccc;
 		font-size: 1.1rem;
 		margin: 0;
 		font-weight: 500;
 	}
 
-	/* 재생 섹션 */
+	/* 재생 섹션 - 전문적인 녹음기 스타일 */
 	.playback-section {
-		color: white;
+		color: #ffffff;
 	}
 
-	/* 완료 메시지 */
+	/* 완료 메시지 - 전문적인 녹음기 스타일 */
 	.completion-message {
-		background: rgba(255, 255, 255, 0.1);
+		background: #2a2a2a;
 		border-radius: 15px;
 		padding: 1.5rem;
 		margin-bottom: 2rem;
-		backdrop-filter: blur(10px);
+		border: 1px solid #444;
 	}
 
 	.completion-message h3 {
@@ -369,7 +377,7 @@
 		margin-bottom: 2rem;
 	}
 
-	/* 재생 버튼 */
+	/* 재생 버튼 - 전문적인 오디오 장비 스타일 */
 	.play-btn {
 		display: inline-flex;
 		align-items: center;
@@ -377,21 +385,22 @@
 		padding: 1rem 2rem;
 		border: none;
 		border-radius: 12px;
-		background: #00d2d3;
+		background: #00a86b;
 		color: white;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.3s ease;
-		box-shadow: 0 4px 15px rgba(0, 210, 211, 0.3);
+		box-shadow: 0 4px 15px rgba(0, 168, 107, 0.3);
+		border: 1px solid #008c5a;
 	}
 
 	.play-btn:hover {
-		background: #00b3b4;
+		background: #008c5a;
 		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(0, 210, 211, 0.4);
+		box-shadow: 0 6px 20px rgba(0, 168, 107, 0.4);
 	}
 
-	/* 삭제 버튼 */
+	/* 삭제 버튼 - 전문적인 녹음기 스타일 */
 	.delete-btn {
 		display: inline-flex;
 		align-items: center;
@@ -399,27 +408,28 @@
 		padding: 1rem 2rem;
 		border: none;
 		border-radius: 12px;
-		background: #ff6b6b;
+		background: #ff4444;
 		color: white;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.3s ease;
-		box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+		box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
+		border: 1px solid #cc3333;
 	}
 
 	.delete-btn:hover {
-		background: #ff5252;
+		background: #cc3333;
 		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+		box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
 	}
 
-	/* 오디오 플레이어 컨테이너 */
+	/* 오디오 플레이어 컨테이너 - 전문적인 녹음기 스타일 */
 	.audio-player-container {
-		background: rgba(255, 255, 255, 0.1);
+		background: #2a2a2a;
 		border-radius: 12px;
 		padding: 1rem;
 		margin-bottom: 2rem;
-		backdrop-filter: blur(10px);
+		border: 1px solid #444;
 	}
 
 	/* HTML5 오디오 플레이어 */
@@ -428,18 +438,22 @@
 		border-radius: 8px;
 	}
 
-	/* 오디오 웨이브 시각화 */
+	/* 오디오 웨이브 시각화 - 전문적인 오디오 장비 스타일 */
 	.waveform {
 		display: flex;
 		justify-content: center;
 		align-items: center;
 		gap: 0.3rem;
 		height: 60px;
+		padding: 1rem;
+		background: #2a2a2a;
+		border-radius: 12px;
+		border: 1px solid #444;
 	}
 
 	.wave-bar {
 		width: 4px;
-		background: linear-gradient(to top, #00d2d3, #667eea);
+		background: linear-gradient(to top, #00a86b, #00d4aa);
 		border-radius: 2px;
 		animation: wave 1.5s ease-in-out infinite;
 	}
