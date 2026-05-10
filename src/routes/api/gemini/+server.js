@@ -2,7 +2,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // 환경변수에서 API 키 가져오기
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyB82VaDvPIcwCszSpJw14Lao7RyMSczI5Y';
 
 // Gemini API 클라이언트 초기화
 let genAI = null;

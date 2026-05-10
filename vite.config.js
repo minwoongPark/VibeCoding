@@ -5,6 +5,9 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
+	define: {
+		'process.env.GEMINI_API_KEY': JSON.stringify(process.env.GEMINI_API_KEY)
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [
