@@ -52,21 +52,21 @@
 </main>
 
 <style>
-	/* 메인 컨테이너 스타일 */
+	/* 메인 컨테이너 스타일 - 전문적인 녹음기 스튜디오 테마 */
 	main {
 		max-width: 1200px;
 		margin: 0 auto;
 		padding: 2rem;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		background: #0a0a0a;
 		min-height: 100vh;
 	}
 
-	/* 헤더 섹션 */
+	/* 헤더 섹션 - 전문적인 녹음기 스튜디오 테마 */
 	.header {
 		text-align: center;
 		margin-bottom: 3rem;
-		color: white;
+		color: #ffffff;
 	}
 
 	.header h1 {
@@ -86,19 +86,20 @@
 		margin-bottom: 3rem;
 	}
 
-	/* 사용 안내 섹션 */
+	/* 사용 안내 섹션 - 전문적인 녹음기 스튜디오 테마 */
 	.guide {
-		background: white;
+		background: #1a1a1a;
 		border-radius: 16px;
 		padding: 2rem;
-		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+		border: 1px solid #333;
 	}
 
 	.guide h2 {
-		color: #1f2937;
+		color: #ffffff;
 		margin-bottom: 1.5rem;
 		font-size: 1.5rem;
-		border-bottom: 2px solid #e5e7eb;
+		border-bottom: 2px solid #444;
 		padding-bottom: 0.5rem;
 	}
 
@@ -109,25 +110,25 @@
 
 	.guide li {
 		margin-bottom: 0.75rem;
-		color: #4b5563;
+		color: #cccccc;
 		line-height: 1.6;
 	}
 
 	.guide li strong {
-		color: #1f2937;
+		color: #ffffff;
 	}
 
-	/* 기능 안내 */
+	/* 기능 안내 - 전문적인 녹음기 스튜디오 테마 */
 	.features {
-		background: #f0fdf4;
+		background: #2a2a2a;
 		border-radius: 12px;
 		padding: 1.5rem;
 		margin-bottom: 2rem;
-		border: 1px solid #bbf7d0;
+		border: 1px solid #444;
 	}
 
 	.features h3 {
-		color: #166534;
+		color: #00a86b;
 		margin-bottom: 1rem;
 		font-size: 1.2rem;
 	}
@@ -139,20 +140,20 @@
 
 	.features li {
 		margin-bottom: 0.5rem;
-		color: #166534;
+		color: #cccccc;
 		line-height: 1.5;
 	}
 
-	/* 사용 팁 */
+	/* 사용 팁 - 전문적인 녹음기 스튜디오 테마 */
 	.tips {
-		background: #fef3c7;
+		background: #2a2a2a;
 		border-radius: 12px;
 		padding: 1.5rem;
-		border: 1px solid #fde68a;
+		border: 1px solid #444;
 	}
 
 	.tips h3 {
-		color: #92400e;
+		color: #ff9800;
 		margin-bottom: 1rem;
 		font-size: 1.2rem;
 	}
@@ -164,7 +165,7 @@
 
 	.tips li {
 		margin-bottom: 0.5rem;
-		color: #92400e;
+		color: #cccccc;
 		line-height: 1.5;
 	}
 
