@@ -1,3 +1,4 @@
+<!-- src/lib/components/EnglishConversation.svelte -->
 <script>
 	import { onDestroy, onMount } from 'svelte';
 	

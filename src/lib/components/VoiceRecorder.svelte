@@ -1,3 +1,4 @@
+<!-- src/lib/components/VoiceRecorder.svelte -->
 <script>
 	import { onDestroy, onMount } from 'svelte';
 	

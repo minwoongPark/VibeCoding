@@ -1,3 +1,4 @@
+<!-- src/lib/components/LiveConversation.svelte -->
 <script>
     import { onMount, onDestroy } from 'svelte';
     import { sendMessage, startNewChat } from '$lib/services/geminiChat.js';
