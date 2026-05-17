@@ -7,15 +7,11 @@ Everything you need to build a Svelte project, powered by [`sv`](https://github.
 If you're seeing this, you've probably already done this step. Congrats!
 
 ```sh
-# create a new project
+# create a new project in the current directory
+npx sv create
+
+# create a new project in my-app
 npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv@0.15.3 create --template minimal --no-types --add eslint vitest="usages:unit,component" tailwindcss="plugins:none" sveltekit-adapter="adapter:vercel" --install npm my-speaking-ai
 ```
 
 ## Developing

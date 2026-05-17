@@ -1,29 +1,24 @@
-import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { includeIgnoreFile } from '@eslint/compat';
 import js from '@eslint/js';
 import svelte from 'eslint-plugin-svelte';
-import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import svelteConfig from './svelte.config.js';
 
-const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
+const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url));
 
-export default defineConfig([
+/** @type {import('eslint').Linter.Config[]} */
+export default [
 	includeIgnoreFile(gitignorePath),
 	js.configs.recommended,
-	svelte.configs.recommended,
+	...svelte.configs.recommended,
 	{
-		languageOptions: { globals: { ...globals.browser, ...globals.node } }
+		languageOptions: {
+			globals: { ...globals.browser, ...globals.node }
+		}
 	},
-
 	{
 		files: ['**/*.svelte', '**/*.svelte.js'],
 		languageOptions: { parserOptions: { svelteConfig } }
-	},
-
-	{
-		// Override or add rule settings here, such as:
-		// 'svelte/button-has-type': 'error'
-		rules: {}
 	}
-]);
+];
