@@ -37,11 +37,17 @@
 		"@supabase/supabase-js": "^2.105.4"
 	},
 	"peerDependencyRules": {
-  		"ignoreMissing": ["eslint"]
+    	"ignoreMissing": ["eslint", "vite"]
 	},
 	"overrides": {
 		"@eslint/compat": {
 			"eslint": "$eslint"
+		},
+		"@sveltejs/kit": {
+			"vite": "$vite"
+		},
+		"vitest": {
+			"vite": "$vite"
 		}
 	}
 }
