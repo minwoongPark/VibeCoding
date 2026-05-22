@@ -101,5 +101,59 @@ export const historyService = {
 
         if (error) throw error;
         return data;
+    },
+
+    /**
+     * 프로필 정보 가져오기
+     */
+    async getProfile(supabase, userId) {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    /**
+     * 온보딩 완료 처리 (프로필 업데이트)
+     */
+    async completeOnboarding(supabase, userId, profileData) {
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                ...profileData, 
+                onboarding_completed: true,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+        if (error) throw error;
+    },
+
+    /**
+     * 활성 약관 목록 가져오기
+     */
+    async getActivePolicies(supabase) {
+        const { data, error } = await supabase
+            .from('policy_versions')
+            .select('*')
+            .eq('is_active', true);
+        if (error) throw error;
+        return data;
+    },
+
+    /**
+     * 약관 동의 저장
+     */
+    async recordConsents(supabase, userId, policyIds) {
+        const consents = policyIds.map(id => ({
+            user_id: userId,
+            policy_version_id: id
+        }));
+        const { error } = await supabase
+            .from('user_consents')
+            .insert(consents);
+        if (error) throw error;
     }
 };
