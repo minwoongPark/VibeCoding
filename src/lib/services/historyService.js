@@ -1,0 +1,77 @@
+
+/**
+ * Supabase를 이용한 대화 기록 저장 서비스
+ */
+export const historyService = {
+    /**
+     * 새로운 대화 세션 생성
+     */
+    async createConversation(supabase, userId, title = 'New Conversation') {
+        const { data, error } = await supabase
+            .from('conversations')
+            .insert({ user_id: userId, title })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    /**
+     * 메시지 저장
+     */
+    async saveMessage(supabase, conversationId, role, content) {
+        const { error: messageError } = await supabase
+            .from('messages')
+            .insert({ conversation_id: conversationId, role, content });
+
+        if (messageError) throw messageError;
+
+        // 대화의 마지막 메시지 및 업데이트 시간 갱신
+        const { error: convError } = await supabase
+            .from('conversations')
+            .update({ last_message: content, updated_at: new Date().toISOString() })
+            .eq('id', conversationId);
+
+        if (convError) throw convError;
+    },
+
+    /**
+     * 사용자의 모든 대화 목록 가져오기
+     */
+    async getConversations(supabase) {
+        const { data, error } = await supabase
+            .from('conversations')
+            .select('*')
+            .order('updated_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    /**
+     * 특정 대화의 메시지들 가져오기
+     */
+    async getMessages(supabase, conversationId) {
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('conversation_id', conversationId)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        return data;
+    },
+
+    /**
+     * 대화 삭제
+     */
+    async deleteConversation(supabase, conversationId) {
+        const { error } = await supabase
+            .from('conversations')
+            .delete()
+            .eq('id', conversationId);
+
+        if (error) throw error;
+    }
+};

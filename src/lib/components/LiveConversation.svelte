@@ -2,6 +2,9 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import { sendMessage, startNewChat } from '$lib/services/geminiChat.js';
+    import { historyService } from '$lib/services/historyService.js';
+
+    let { supabase, user } = $props();
 
     let isConnected = $state(false);
     let isThinking = $state(false);
@@ -9,12 +12,16 @@
     let inputText = $state('');
     let error = $state('');
     let chatEnd;
+    let conversationId = $state(null);
 
     onMount(async () => {
         try {
             await startNewChat('gemini-2.5-flash');
             isConnected = true;
-            addMessage('assistant', 'Hello! I am your English practice partner. How can I help you today?');
+            
+            // 초기 환영 메시지
+            const welcomeText = 'Hello! I am your English practice partner. How can I help you today?';
+            addMessage('assistant', welcomeText);
         } catch (e) {
             error = "Failed to initialize chat. Check your API Key.";
             console.error(e);
@@ -28,6 +35,17 @@
         }
     });
 
+    async function ensureConversation() {
+        if (!conversationId && user) {
+            try {
+                const conv = await historyService.createConversation(supabase, user.id, "English Conversation");
+                conversationId = conv.id;
+            } catch (e) {
+                console.error("Failed to create conversation in DB:", e);
+            }
+        }
+    }
+
     async function handleSendMessage() {
         if (!inputText.trim() || isThinking) return;
 
@@ -39,8 +57,19 @@
         error = '';
 
         try {
+            // DB에 대화 저장 시작
+            await ensureConversation();
+            if (conversationId) {
+                historyService.saveMessage(supabase, conversationId, 'user', userText);
+            }
+
             const responseText = await sendMessage(userText);
             addMessage('assistant', responseText);
+
+            // AI 응답 저장
+            if (conversationId) {
+                historyService.saveMessage(supabase, conversationId, 'model', responseText);
+            }
         } catch (e) {
             error = "Error: Could not get response from AI.";
             console.error(e);
@@ -63,6 +92,7 @@
     async function resetChat() {
         messages = [];
         error = '';
+        conversationId = null; // 리셋 시 새로운 세션 생성 유도
         try {
             await startNewChat('gemini-2.5-flash');
             addMessage('assistant', 'Chat reset! What should we talk about now?');

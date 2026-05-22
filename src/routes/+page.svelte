@@ -53,7 +53,7 @@
 				</div>
 			{:else if activeTab === 'live'}
 				<div class="tab-content">
-					<LiveConversation />
+					<LiveConversation supabase={data.supabase} user={data.user} />
 
 					<div class="guide live-guide">
 						<h2>🎙️ 실시간 영어회화 사용 방법</h2>
