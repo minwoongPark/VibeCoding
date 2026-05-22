@@ -166,6 +166,65 @@ INSERT INTO public.policy_versions (type, version, content) VALUES
 ('terms_of_service', 'v1.0', '서비스 이용약관 내용...'),
 ('privacy_policy', 'v1.0', '개인정보 처리방침 내용...');
 
+-- 4. 사용량 로그 테이블
+CREATE TABLE IF NOT EXISTS public.usage_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    conversation_id UUID REFERENCES public.conversations(id) ON DELETE SET NULL,
+    model_name TEXT DEFAULT 'gemini-1.5-flash',
+    prompt_tokens INTEGER DEFAULT 0,
+    candidate_tokens INTEGER DEFAULT 0,
+    total_tokens INTEGER DEFAULT 0,
+    estimated_cost_usd NUMERIC(12, 10) DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS 설정
+ALTER TABLE public.usage_logs ENABLE ROW LEVEL SECURITY;
+
+-- 사용량 로그 정책 (자신의 로그만 조회 가능)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view own usage logs') THEN
+        CREATE POLICY "Users can view own usage logs" 
+        ON public.usage_logs FOR SELECT TO authenticated 
+        USING (auth.uid() = user_id);
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert own usage logs') THEN
+        CREATE POLICY "Users can insert own usage logs" 
+        ON public.usage_logs FOR INSERT TO authenticated 
+        WITH CHECK (auth.uid() = user_id);
+    END IF;
+END $$;
+
+-- 인덱스 추가
+CREATE INDEX IF NOT EXISTS idx_usage_logs_user_id ON public.usage_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_usage_logs_created_at ON public.usage_logs(created_at);
+
+-- 대화별 사용량 집계
+ (상단에 위치하거나 다른 함수 뒤에 위치)
+CREATE OR REPLACE FUNCTION public.get_daily_usage(p_user_id UUID)
+RETURNS TABLE (
+    usage_date DATE,
+    total_prompt_tokens BIGINT,
+    total_candidate_tokens BIGINT,
+    total_cost_usd NUMERIC
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        created_at::DATE as usage_date,
+        SUM(prompt_tokens)::BIGINT,
+        SUM(candidate_tokens)::BIGINT,
+        SUM(estimated_cost_usd)::NUMERIC
+    FROM public.usage_logs
+    WHERE user_id = p_user_id
+    GROUP BY usage_date
+    ORDER BY usage_date DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 DROP TRIGGER IF EXISTS set_updated_at ON public.conversations;
 CREATE TRIGGER set_updated_at
 BEFORE UPDATE ON public.conversations

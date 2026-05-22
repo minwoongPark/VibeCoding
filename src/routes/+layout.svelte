@@ -27,6 +27,7 @@
 	<a href="/" class="text-xl font-bold text-blue-600">My Speaking AI</a>
 	<div class="flex gap-4 items-center">
 		{#if session}
+			<a href="/usage" class="text-sm text-gray-600 hover:text-blue-600">사용량</a>
 			<a href="/history" class="text-sm text-gray-600 hover:text-blue-600">대화 기록</a>
 			<span class="text-sm text-gray-600">{user?.email}님 안녕하세요</span>
 			<form action="/auth/logout" method="POST">

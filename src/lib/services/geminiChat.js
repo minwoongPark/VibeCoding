@@ -29,7 +29,7 @@ export async function startNewChat(modelName = 'gemini-2.5-flash', customInstruc
 }
 
 /**
- * Send a message to the existing chat session.
+ * Send a message to the existing chat session and return text and usage metadata.
  */
 export async function sendMessage(text) {
     if (!chatSession) {
@@ -39,7 +39,10 @@ export async function sendMessage(text) {
     try {
         const result = await chatSession.sendMessage(text);
         const response = await result.response;
-        return response.text();
+        return {
+            text: response.text(),
+            usage: response.usageMetadata
+        };
     } catch (error) {
         console.error('❌ [GeminiChat] Error sending message:', error);
         throw error;

@@ -155,5 +155,73 @@ export const historyService = {
             .from('user_consents')
             .insert(consents);
         if (error) throw error;
+    },
+
+    /**
+     * Gemini 사용량 로그 기록
+     */
+    async logUsage(supabase, { userId, conversationId, model, usage }) {
+        // Gemini 1.5 Flash 가격 (2024년 기준 1M 토큰당 $0.075 / $0.30)
+        const promptCost = (usage.promptTokenCount / 1000000) * 0.075;
+        const responseCost = (usage.candidatesTokenCount / 1000000) * 0.30;
+        const totalCost = promptCost + responseCost;
+
+        const { error } = await supabase
+            .from('usage_logs')
+            .insert({
+                user_id: userId,
+                conversation_id: conversationId,
+                model_name: model,
+                prompt_tokens: usage.promptTokenCount,
+                candidate_tokens: usage.candidatesTokenCount,
+                total_tokens: usage.totalTokenCount,
+                estimated_cost_usd: totalCost
+            });
+        
+        if (error) {
+            console.error("❌ [HistoryService] Usage logging failed:", error);
+            throw error;
+        }
+    },
+
+    /**
+     * 사용량 통계 데이터 가져오기
+     */
+    async getUsageStats(supabase, userId) {
+        // 전체 요약
+        const { data: summary, error: summaryErr } = await supabase
+            .from('usage_logs')
+            .select('prompt_tokens, candidate_tokens, total_tokens, estimated_cost_usd')
+            .eq('user_id', userId);
+
+        // 일별 통계
+        const { data: daily, error: dailyErr } = await supabase
+            .rpc('get_daily_usage', { p_user_id: userId });
+
+        // 대화별 통계
+        const { data: convUsage, error: convErr } = await supabase
+            .from('usage_logs')
+            .select(`
+                conversation_id,
+                conversations(title),
+                prompt_tokens,
+                candidate_tokens,
+                total_tokens,
+                estimated_cost_usd,
+                created_at
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (summaryErr || dailyErr || convErr) {
+            // daily_usage RPC가 없을 경우를 대비해 간단한 쿼리로 대체 가능
+            console.warn("Some usage stats failed to load. RPC might be missing.");
+        }
+
+        return {
+            summary: summary || [],
+            daily: daily || [],
+            conversations: convUsage || []
+        };
     }
 };

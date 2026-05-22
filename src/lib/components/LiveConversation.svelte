@@ -103,12 +103,22 @@
                 historyService.saveMessage(supabase, conversationId, 'user', userText);
             }
 
-            const responseText = await sendMessage(userText);
+            const { text: responseText, usage } = await sendMessage(userText);
             addMessage('assistant', responseText);
 
-            // AI 응답 저장
+            // AI 응답 및 사용량 저장
             if (conversationId) {
-                historyService.saveMessage(supabase, conversationId, 'model', responseText);
+                await historyService.saveMessage(supabase, conversationId, 'model', responseText);
+                
+                // 사용량 로그 기록
+                if (usage) {
+                    await historyService.logUsage(supabase, {
+                        userId: user.id,
+                        conversationId: conversationId,
+                        model: 'gemini-1.5-flash',
+                        usage
+                    });
+                }
             }
         } catch (e) {
             error = "Error: Could not get response from AI.";
