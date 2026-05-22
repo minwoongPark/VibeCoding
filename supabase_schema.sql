@@ -59,6 +59,37 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- 사용자 설정을 저장하는 테이블
+CREATE TABLE IF NOT EXISTS public.user_settings (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    ai_personality TEXT DEFAULT 'friendly', -- 'friendly', 'strict', 'custom'
+    custom_instruction TEXT,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS 설정
+ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
+
+-- 사용자 설정 정책
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can manage their own settings') THEN
+        CREATE POLICY "Users can manage their own settings" 
+        ON public.user_settings FOR ALL 
+        TO authenticated 
+        USING (auth.uid() = user_id)
+        WITH CHECK (auth.uid() = user_id);
+    END IF;
+END $$;
+
+DROP TRIGGER IF EXISTS set_updated_at_settings ON public.user_settings;
+CREATE TRIGGER set_updated_at_settings
+BEFORE UPDATE ON public.user_settings
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_updated_at();
+
+-- 기존 트리거들...
+
 DROP TRIGGER IF EXISTS set_updated_at ON public.conversations;
 CREATE TRIGGER set_updated_at
 BEFORE UPDATE ON public.conversations

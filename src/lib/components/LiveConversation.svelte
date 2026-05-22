@@ -14,19 +14,59 @@
     let chatEnd;
     let conversationId = $state(null);
 
+    // AI 설정 상태
+    let personality = $state('friendly');
+    let customInstruction = $state('');
+    let showSettings = $state(false);
+
+    const presetPrompts = {
+        friendly: "You are a friendly and helpful English conversation partner. Speak naturally, correct mistakes kindly, and keep it engaging.",
+        strict: "You are a strict English teacher. Focus heavily on grammar and vocabulary. Correct every mistake the user makes with detailed explanations.",
+        casual: "You are a casual friend from New York. Use slang and informal English. Keep the conversation light and fun."
+    };
+
     onMount(async () => {
         try {
-            await startNewChat('gemini-2.5-flash');
-            isConnected = true;
-            
-            // 초기 환영 메시지
-            const welcomeText = 'Hello! I am your English practice partner. How can I help you today?';
-            addMessage('assistant', welcomeText);
+            // 사용자 설정 로드
+            if (user) {
+                const settings = await historyService.getUserSettings(supabase, user.id);
+                if (settings) {
+                    personality = settings.ai_personality || 'friendly';
+                    customInstruction = settings.custom_instruction || '';
+                }
+            }
+
+            await initializeChat();
         } catch (e) {
-            error = "Failed to initialize chat. Check your API Key.";
+            error = "Failed to initialize. Check your API Key.";
             console.error(e);
         }
     });
+
+    async function initializeChat() {
+        const instruction = personality === 'custom' ? customInstruction : presetPrompts[personality];
+        await startNewChat('gemini-2.5-flash', instruction);
+        isConnected = true;
+        
+        messages = [];
+        addMessage('assistant', `Hello! I'm ready to chat as your ${personality} partner. How are you today?`);
+    }
+
+    async function saveSettings() {
+        if (!user) return;
+        try {
+            await historyService.updateUserSettings(supabase, user.id, {
+                ai_personality: personality,
+                custom_instruction: customInstruction
+            });
+            showSettings = false;
+            await initializeChat(); // 설정 변경 시 채팅 초기화
+        } catch (e) {
+            console.error("Failed to save settings:", e);
+        }
+    }
+
+    // ... (rest of the existing effects and functions)
 
     // Auto-scroll to bottom
     $effect(() => {
@@ -108,8 +148,72 @@
             <h2>💬 English Practice Chat</h2>
             <p class="subtitle">Powered by Gemini 2.5 Flash</p>
         </div>
-        <button class="reset-btn" onclick={resetChat}>Reset Chat</button>
+        <div class="header-actions">
+            <button class="settings-btn" onclick={() => showSettings = true} title="AI 설정">⚙️ Personality</button>
+            <button class="reset-btn" onclick={resetChat}>Reset Chat</button>
+        </div>
     </div>
+
+    {#if showSettings}
+        <div class="settings-modal-overlay" onclick={() => showSettings = false}>
+            <div class="settings-modal" onclick={e => e.stopPropagation()}>
+                <h3>🤖 AI Personality Settings</h3>
+                <p class="settings-desc">AI의 대화 말투와 행동 지침을 선택하거나 직접 입력하세요.</p>
+                
+                <div class="personality-options">
+                    <label class="option-card" class:selected={personality === 'friendly'}>
+                        <input type="radio" bind:group={personality} value="friendly" />
+                        <span class="icon">😊</span>
+                        <div class="option-info">
+                            <strong>Friendly</strong>
+                            <span>친절하고 격려하는 대화 상대</span>
+                        </div>
+                    </label>
+                    <label class="option-card" class:selected={personality === 'strict'}>
+                        <input type="radio" bind:group={personality} value="strict" />
+                        <span class="icon">👨‍🏫</span>
+                        <div class="option-info">
+                            <strong>Strict Teacher</strong>
+                            <span>문법 교정과 학습에 집중</span>
+                        </div>
+                    </label>
+                    <label class="option-card" class:selected={personality === 'casual'}>
+                        <input type="radio" bind:group={personality} value="casual" />
+                        <span class="icon">😎</span>
+                        <div class="option-info">
+                            <strong>Casual Friend</strong>
+                            <span>슬랭과 비격식적인 자연스러운 대화</span>
+                        </div>
+                    </label>
+                    <label class="option-card" class:selected={personality === 'custom'}>
+                        <input type="radio" bind:group={personality} value="custom" />
+                        <span class="icon">✍️</span>
+                        <div class="option-info">
+                            <strong>Custom</strong>
+                            <span>직접 프롬프트 작성</span>
+                        </div>
+                    </label>
+                </div>
+
+                {#if personality === 'custom'}
+                    <div class="custom-prompt-area">
+                        <label for="custom-instruction">Custom Instructions:</label>
+                        <textarea 
+                            id="custom-instruction"
+                            bind:value={customInstruction}
+                            placeholder="e.g. 당신은 우주 비행사입니다. 화성 탐사에 대해 영어로 대화해주세요."
+                            rows="4"
+                        ></textarea>
+                    </div>
+                {/if}
+
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick={() => showSettings = false}>Cancel</button>
+                    <button class="btn-save" onclick={saveSettings}>Save & Reset Chat</button>
+                </div>
+            </div>
+        </div>
+    {/if}
 
     {#if error}
         <div class="error-box">
@@ -185,17 +289,103 @@
     .header h2 { margin: 0; font-size: 1.1rem; color: #fff; }
     .subtitle { margin: 0; font-size: 0.75rem; color: #888; }
 
-    .reset-btn {
-        background: none;
+    .header-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .settings-btn {
+        background: #333;
         border: 1px solid #444;
-        color: #888;
+        color: #ccc;
         padding: 0.4rem 0.8rem;
         border-radius: 8px;
         font-size: 0.75rem;
         cursor: pointer;
         transition: all 0.2s;
     }
-    .reset-btn:hover { background: #333; color: #fff; }
+    .settings-btn:hover { background: #444; color: #fff; }
+
+    /* Modal Styles */
+    .settings-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+
+    .settings-modal {
+        background: #1a1a1a;
+        width: 100%;
+        max-width: 500px;
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid #333;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+
+    .settings-modal h3 { margin-top: 0; color: #fff; }
+    .settings-desc { color: #888; font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+    .personality-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .option-card {
+        background: #222;
+        border: 2px solid #333;
+        padding: 1rem;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .option-card input { position: absolute; opacity: 0; }
+    .option-card.selected { border-color: #00a86b; background: rgba(0, 168, 107, 0.1); }
+
+    .option-card .icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .option-info strong { display: block; font-size: 0.9rem; color: #fff; }
+    .option-info span { font-size: 0.7rem; color: #777; }
+
+    .custom-prompt-area {
+        margin-bottom: 1.5rem;
+    }
+
+    .custom-prompt-area label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 0.5rem; }
+    .custom-prompt-area textarea {
+        width: 100%;
+        background: #121212;
+        border: 1px solid #333;
+        border-radius: 8px;
+        color: #fff;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    .btn-cancel { background: none; border: 1px solid #444; color: #888; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; }
+    .btn-save { background: #00a86b; border: none; color: #fff; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn-save:hover { background: #008f5d; }
 
     /* Error Box */
     .error-box {

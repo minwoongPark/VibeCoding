@@ -73,5 +73,33 @@ export const historyService = {
             .eq('id', conversationId);
 
         if (error) throw error;
+    },
+
+    /**
+     * 사용자 설정 가져오기
+     */
+    async getUserSettings(supabase, userId) {
+        const { data, error } = await supabase
+            .from('user_settings')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 is 'no rows returned'
+        return data;
+    },
+
+    /**
+     * 사용자 설정 저장/업데이트
+     */
+    async updateUserSettings(supabase, userId, settings) {
+        const { data, error } = await supabase
+            .from('user_settings')
+            .upsert({ user_id: userId, ...settings })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     }
 };

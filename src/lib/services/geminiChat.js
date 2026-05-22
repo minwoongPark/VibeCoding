@@ -8,12 +8,14 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 let chatSession = null;
 
 /**
- * Initialize a new chat session with a specific system instruction for English practice.
+ * Initialize a new chat session with a specific system instruction.
  */
-export async function startNewChat(modelName = 'gemini-2.5-flash') {
+export async function startNewChat(modelName = 'gemini-2.5-flash', customInstruction = null) {
+    const defaultInstruction = "You are a friendly and helpful English conversation partner. Your goal is to help the user practice English. Speak naturally, correct their mistakes kindly, and keep the conversation engaging. Use simple to intermediate English unless the user's level is higher.";
+    
     const model = genAI.getGenerativeModel({ 
         model: modelName,
-        systemInstruction: "You are a friendly and helpful English conversation partner. Your goal is to help the user practice English. Speak naturally, correct their mistakes kindly, and keep the conversation engaging. Use simple to intermediate English unless the user's level is higher."
+        systemInstruction: customInstruction || defaultInstruction
     });
 
     chatSession = model.startChat({
